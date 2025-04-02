@@ -3,6 +3,7 @@ import { Tabs } from "expo-router";
 import { Calendar, Pill, User } from "lucide-react-native";
 import { colors } from "@/constants/colors";
 import { translations } from "@/constants/translations";
+import { Platform } from "react-native";
 
 export default function TabLayout() {
   return (
@@ -13,7 +14,7 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: colors.white,
           borderTopColor: colors.border,
-          // height: 60, todo написать условие ios android разную высоту мб
+          height: Platform.OS === 'ios' ? 80 : 60,
           paddingTop: 10,
         },
         headerStyle: {
