@@ -30,8 +30,8 @@ export interface MedicationSchedule {
   medicationId: string;
   time: string; // HH:MM format
   frequency: "daily" | "every_other_day" | "specific_days" | "specific_dates";
-  days: number[]; // 0-6 (Sunday-Saturday) or 1-7 (Monday-Sunday)
-  dates: string[]; // YYYY-MM-DD format for specific dates
+  days: number[]; // 1-7 (Monday-Sunday)
+  dates: string[]; // YYYY-MM-DD format
   mealRelation: MealRelation;
   startDate: string;
   endDate?: string;
@@ -47,8 +47,13 @@ export interface MedicationIntake {
   scheduledTime: string; // HH:MM format
   scheduledDate: string; // YYYY-MM-DD format
   status: "taken" | "missed" | "pending";
-  takenAt?: number; // Timestamp when medication was taken
+  takenAt?: number;
   createdAt: number;
+  // medicationName: string;
+  // mealRelation: MealRelation;
+  // dosage: string;
+  // instructions: string; 
+  // todo эти данные нужны в случае, если юзер удаляет у себя препарат/курс, но хочет чтоб осталась история о приемах в журнале
 }
 
 export interface DailyMedicationWithStatus {

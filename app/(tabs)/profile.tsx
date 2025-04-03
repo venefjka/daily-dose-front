@@ -9,7 +9,6 @@ import {
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  Settings,
   LogOut,
   Bell,
   HelpCircle,

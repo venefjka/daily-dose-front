@@ -1,7 +1,11 @@
-// todo вместо Расписание Время приема 1 ... Время приема 2 должны появиться окошки Курс 1 Курс 2  и переход к их редактированию по клику
+// todo вместо длинного окна Расписание Курс 1 ... Курс 2 ... должны появиться окошки Курс 1 Курс 2  и переход к их редактированию по клику
 // добавить внутри одного курса возможность выбрать несколько штук времени 12:00 19:00
 
 // todo кастомные кнопки назад для ios
+
+// todo когда запас лекарства исчерпан, а человек отмечает, что он его принял, надо предложить ему обновить имеющееся кол-во препарата в вкладке. там же нужно сделать удобную кнопку "пополнить запас"
+
+// todo убрать отсюда парамс, перенести их в редактирование, а не создание
 
 import React, { useState, useEffect } from "react";
 import {
@@ -10,7 +14,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,9 +26,8 @@ import { MealRelation, MedicationSchedule } from "@/types";
 import { translations } from "@/constants/translations";
 import { ScheduleTime } from "@/components/ScheduleTime";
 import { ScheduleFrequency } from "@/components/ScheduleFrequency";
-import { LinearGradient } from "expo-linear-gradient";
 import { format } from "date-fns/format";
-import { addDays, parseISO, set } from "date-fns";
+import { addDays, parseISO } from "date-fns";
 import { DatePicker } from "@/components/DatePicker";
 import { ScheduleMealRelation } from "@/components/ScheduleMealRelation";
 
@@ -36,11 +38,10 @@ export default function AddReminderScreen() {
   }>();
   const { medicationId, date } = params;
 
-  const [selectedMedicationId, setSelectedMedicationId] = useState<
+  const [selectedMedicationId] = useState<
     string | undefined
   >(medicationId);
-  const [schedules, setSchedules] = useState<
-    Array<MedicationSchedule & { isNew?: boolean }>
+  const [schedules, setSchedules] = useState<(MedicationSchedule & { isNew?: boolean })[]
   >([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [existingSchedulesLoaded, setExistingSchedulesLoaded] = useState(false);
@@ -52,7 +53,6 @@ export default function AddReminderScreen() {
   );
 
   const {
-    medications,
     getMedicationById,
     getSchedulesForMedication,
     addSchedule,
@@ -62,9 +62,6 @@ export default function AddReminderScreen() {
 
   const selectedMedication = selectedMedicationId
     ? getMedicationById(selectedMedicationId)
-    : undefined;
-  const medicationSchedules = selectedMedicationId
-    ? getSchedulesForMedication(selectedMedicationId)
     : undefined;
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -101,15 +98,23 @@ export default function AddReminderScreen() {
       setIsInitialized(true);
       setExistingSchedulesLoaded(true);
     }
-  }, [selectedMedicationId, existingSchedulesLoaded]);
+  }, [selectedMedicationId, existingSchedulesLoaded, getSchedulesForMedication, isInitialized]);
 
   // Устанавливаем дату, если она передана в параметрах
   useEffect(() => {
-    if (date && schedules[0].dates.length === 0) {
-      const newSchedules = [...schedules];
-      newSchedules[0].dates = [date];
-      newSchedules[0].frequency = "specific_dates";
-      setSchedules(newSchedules);
+    if (date) {
+      setSchedules((prevSchedules) => {
+        if (prevSchedules.length === 0 || prevSchedules[0].dates?.length !== 0) {
+          return prevSchedules; // Если нет расписаний или даты уже установлены, ничего не меняем
+        }
+        const newSchedules = [...prevSchedules];
+        newSchedules[0] = { 
+          ...newSchedules[0], 
+          dates: [date], 
+          frequency: "specific_dates" 
+        };
+        return newSchedules;
+      });
     }
   }, [date]);
 
@@ -198,7 +203,7 @@ export default function AddReminderScreen() {
   };
 
   const navigateToSelectMedication = () => {
-    router.push("/reminders/select-medication");
+    router.replace("/reminders/select-medication");
   };
 
   const updateScheduleTime = (index: number, time: string) => {
@@ -207,9 +212,9 @@ export default function AddReminderScreen() {
     setSchedules(newSchedules);
   };
 
-  const removeScheduleTime = (index: number) => {
-    // todo
-  };
+  // const removeScheduleTime = (index: number) => {
+  // todo
+  // };
 
   const updateScheduleFrequency = (
     index: number,
@@ -293,6 +298,7 @@ export default function AddReminderScreen() {
     ]);
   };
 
+  // todo 
   const removeScheduleCourse = (index: number) => {
     if (schedules.length > 1) {
       const scheduleToRemove = schedules[index];
@@ -365,7 +371,7 @@ export default function AddReminderScreen() {
                 time={schedule.time}
                 onTimeChange={(time) => updateScheduleTime(scheduleIndex, time)}
                 onRemove={() => {
-                  removeScheduleTime(scheduleIndex);
+                  removeScheduleCourse(scheduleIndex);
                 }}
                 isRemovable={schedules.length > 1}
               />

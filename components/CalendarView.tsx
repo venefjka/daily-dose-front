@@ -14,13 +14,13 @@ import { getMonthName, getDayName, getWeekDays } from "@/utils/date-utils";
 interface CalendarViewProps {
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
-  markedDates?: Record<string, { marked: boolean; dotColor?: string }>;
+  markedDates: Record<string, { marked: boolean; dotColor?: string }>;
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
   selectedDate,
   onDateSelect,
-  markedDates = {},
+  markedDates,
 }) => {
   const today = new Date();
 

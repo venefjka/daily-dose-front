@@ -1,16 +1,14 @@
-// todo возможно редактирование времени напоминания стоит перенести для каждого расписания/лекарства отдельно?
-// сделать чтоб работало...
+// todo наверное редактирование времени напоминания стоит перенести для каждого расписания/лекарства отдельно
+// сделать чтоб работало
 
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Switch, ScrollView } from "react-native";
-import { Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Bell, Clock, AlertCircle } from "lucide-react-native";
+import { Bell, AlertCircle } from "lucide-react-native";
 import { colors } from "@/constants/colors";
 import { translations } from "@/constants/translations";
 import { useSettingsStore } from "@/store/settings-store";
 import { Button } from "@/components/Button";
-import * as Notifications from "expo-notifications";
 import { registerForPushNotificationsAsync } from "@/utils/notification-utils";
 
 export default function NotificationsScreen() {

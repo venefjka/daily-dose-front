@@ -3,8 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
-  Dimensions,
   TouchableOpacity,
 } from "react-native";
 import { Stack, router } from "expo-router";
@@ -20,8 +18,6 @@ import { colors } from "@/constants/colors";
 import { Button } from "@/components/Button";
 import { translations } from "@/constants/translations";
 import { useOnboardingStore } from "@/store/onboarding-store";
-
-const { width } = Dimensions.get("window");
 
 export default function OnboardingScreen() {
   const [currentStep, setCurrentStep] = useState(0);

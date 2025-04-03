@@ -6,9 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import { Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { PieChart, Calendar, Award, AlertTriangle } from "lucide-react-native";
+import { PieChart, AlertTriangle } from "lucide-react-native";
 import { colors } from "@/constants/colors";
 import { translations } from "@/constants/translations";
 import { useMedicationStore } from "@/store/medication-store";
@@ -54,10 +53,6 @@ export default function StatisticsScreen() {
     { label: translations.last3Months, value: "3months" },
     { label: translations.allTime, value: "allTime" },
   ];
-
-  const bestAdherenceMedications = [...medicationAdherence]
-    .sort((a, b) => b.adherenceRate - a.adherenceRate)
-    .slice(0, 3);
 
   const worstAdherenceMedications = [...medicationAdherence]
     .sort((a, b) => a.adherenceRate - b.adherenceRate)
@@ -170,46 +165,6 @@ export default function StatisticsScreen() {
             </Text>
           )}
         </View>
-
-        {/* <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Award size={20} color={colors.primary} />
-            <Text style={styles.sectionTitle}>
-              {translations.bestAdherence}
-            </Text>
-          </View>
-
-          {bestAdherenceMedications.length > 0 ? (
-            bestAdherenceMedications.map((medication, index) => (
-              <View key={index} style={styles.medicationItem}>
-                <Text style={styles.medicationName}>
-                  {medication.medicationName}
-                </Text>
-                <View style={styles.adherenceContainer}>
-                  <View
-                    style={[
-                      styles.adherenceBar,
-                      {
-                        width: `${medication.adherenceRate}%`,
-                        backgroundColor:
-                          medication.adherenceRate < 50
-                            ? colors.error
-                            : medication.adherenceRate < 80
-                              ? colors.warning
-                              : colors.success,
-                      },
-                    ]}
-                  />
-                  <Text style={styles.adherenceText}>
-                    {medication.adherenceRate.toFixed(0)}%
-                  </Text>
-                </View>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.emptyText}>Нет данных о соблюдении приема</Text>
-          )}
-        </View> */}
       </ScrollView>
     </SafeAreaView>
   );

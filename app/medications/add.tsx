@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
 } from "react-native";
 import { Stack, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -63,8 +62,7 @@ export default function AddMedicationScreen() {
   const handleSave = () => {
     if (!validateForm()) return;
 
-    // Добавляем только информацию о лекарстве без расписания
-    const medicationId = addMedication({
+    addMedication({
       name,
       dosage,
       instructions,

@@ -68,17 +68,6 @@ export const MedicationCard: React.FC<MedicationCardProps> = ({
     }
   };
 
-  const getStatusText = () => {
-    switch (status) {
-      case "taken":
-        return translations.taken;
-      case "missed":
-        return translations.missed;
-      default:
-        return translations.pending;
-    }
-  };
-
   const handleCardPress = () => {
     setModalVisible(true);
   };

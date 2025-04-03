@@ -11,11 +11,8 @@ import { Stack, router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Pill,
-  Clock,
-  Calendar,
   AlertCircle,
   Trash2,
-  Plus,
 } from "lucide-react-native";
 import { colors } from "@/constants/colors";
 import { Input } from "@/components/Input";
@@ -31,9 +28,6 @@ export default function EditMedicationScreen() {
     getMedicationById,
     getSchedulesForMedication,
     updateMedication,
-    updateSchedule,
-    addSchedule,
-    deleteSchedule,
     deleteMedication,
   } = useMedicationStore();
 
@@ -141,7 +135,7 @@ export default function EditMedicationScreen() {
           text: translations.delete,
           style: "destructive",
           onPress: () => {
-            deleteMedication(id);
+            deleteMedication(id, true);
             router.back();
           },
         },

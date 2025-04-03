@@ -1,4 +1,4 @@
-// todo НЕ ИСПОЛЬЗУЕТСЯ, НО ДОЛЖНЕН ПРИГОДИТЬСЯ, ЕСЛИ БУДЕТ ДОРАБОТАН
+// todo НЕ ИСПОЛЬЗУЕТСЯ, НО ДОЛЖЕН - надо доработать
 
 import React, { useState, useEffect } from "react";
 import {
@@ -13,10 +13,9 @@ import { Stack, router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Trash2 } from "lucide-react-native";
 import { colors } from "@/constants/colors";
-import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { useMedicationStore } from "@/store/medication-store";
-import { MealRelation, MedicationSchedule } from "@/types";
+import { MealRelation } from "@/types";
 import { translations } from "@/constants/translations";
 import { ScheduleTime } from "@/components/ScheduleTime";
 import { ScheduleFrequency } from "@/components/ScheduleFrequency";

@@ -1,7 +1,7 @@
 // todo ПЕРЕПИСАТЬ ЛОГИКУ УДАЛЕНИЯ сейчас даже при неподтвержденном удалении какого-то расписания оно стирается со всего журнала, аналогично с лекарствами
 // при удалении курса надо предложить пользователю завершить курс или снести все записи?
 
-// todo  учитывать какое кол-во препарата принимается за раз и вычитать из общего кол-ва, сейчас вычитается по 1
+// todo учитывать какое кол-во препарата принимается за раз и вычитать из общего кол-ва, сейчас вычитается по 1
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
@@ -18,7 +18,6 @@ import {
 import {
   format,
   parseISO,
-  isToday,
   isBefore,
   startOfDay,
   endOfDay,
@@ -60,7 +59,7 @@ interface MedicationState {
   getScheduleById: (id: string) => MedicationSchedule | undefined;
   getSchedulesForMedication: (medicationId: string) => MedicationSchedule[];
   getMedicationsByDate: (date: string) => DailyMedicationWithStatus[];
-  getMedicationsForCalendar: () => DayMedications;
+  getMedicationsForCalendar: (date: string) => DayMedications;
   getMedicationStats: (days?: number) => MedicationStats;
   getLowStockMedications: () => Medication[];
   getMedicationAdherenceByTimeRange: (
@@ -349,58 +348,19 @@ export const useMedicationStore = create<MedicationState>()(
           .filter(Boolean) as DailyMedicationWithStatus[];
       },
 
-      getMedicationsForCalendar: () => {
+      getMedicationsForCalendar: (date) => {
         const result: DayMedications = {};
-        const { medications, schedules, intakes } = get();
-
-        // Обрабатываем все приемы для построения данных календаря
-        intakes.forEach((intake) => {
-          const date = intake.scheduledDate;
-          const schedule = schedules.find((s) => s.id === intake.scheduleId);
-          const medication = medications.find(
-            (m) => m.id === intake.medicationId,
-          );
-
-          if (!schedule || !medication) return;
-
-          if (!result[date]) {
-            result[date] = [];
-          }
-
-          result[date].push({
-            id: intake.id,
-            scheduleId: intake.scheduleId,
-            medicationId: intake.medicationId,
-            name: medication.name,
-            dosage: medication.dosage,
-            instructions: medication.instructions,
-            time: intake.scheduledTime,
-            mealRelation: schedule.mealRelation,
-            status: intake.status,
-            takenAt: intake.takenAt,
-            iconName: medication.iconName,
-            iconColor: medication.iconColor,
-          });
-        });
-
-        // Добавляем запланированные приемы на будущие даты
-        const today = new Date();
-        const nextMonth = new Date(today);
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-
-        for (
-          let d = new Date(today);
-          d <= nextMonth;
-          d.setDate(d.getDate() + 1)
-        ) {
+        const { getMedicationsByDate } = get();
+        
+        const dateObj = parseISO(date);
+        const weekStart = startOfDay(subDays(dateObj, dateObj.getDay() === 0 ? 6 : dateObj.getDay() - 1)); // Понедельник
+        const weekEnd = endOfDay(addDays(weekStart, 6)); // Воскресенье
+      
+        for (let d = new Date(weekStart); d <= weekEnd; d.setDate(d.getDate() + 1)) {
           const dateString = format(d, "yyyy-MM-dd");
-          const medications = get().getMedicationsByDate(dateString);
-
-          if (medications.length > 0 && !result[dateString]) {
-            result[dateString] = medications;
-          }
+          result[dateString] = getMedicationsByDate(dateString);
         }
-
+      
         return result;
       },
 

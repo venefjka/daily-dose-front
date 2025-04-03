@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, FlatList } from "react-native";
 import { Stack, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,7 +8,7 @@ import { CalendarView } from "@/components/CalendarView";
 import { MedicationCard } from "@/components/MedicationCard";
 import { EmptyState } from "@/components/EmptyState";
 import { useMedicationStore } from "@/store/medication-store";
-import { formatDate, formatTime, getCurrentDate } from "@/utils/date-utils";
+import { formatDate, formatTime} from "@/utils/date-utils";
 import { translations } from "@/constants/translations";
 import { Button } from "@/components/Button";
 
@@ -26,28 +26,29 @@ export default function CalendarScreen() {
     return timeA[0] * 60 + timeA[1] - (timeB[0] * 60 + timeB[1]); // Сортируем по минутам с начала дня
   });
 
-  const calendarData = getMedicationsForCalendar();
+  const calendarData = getMedicationsForCalendar(formattedDate);
 
   const todayMedications = sortedMedications;
 
   // Подготавливаем отмеченные даты для календаря
-  // todo некорректно работают dots
+  // todo отметки приходят через getMedicationsForCalendar который получает инфу только по текущей неделе, если перейти на новую неделю, не выбрав день, отметки не отрисовываются
   const markedDates: Record<string, { marked: boolean; dotColor: string }> = {};
 
   Object.keys(calendarData).forEach((date) => {
     const hasMissed = calendarData[date].some((med) => med.status === "missed");
     const hasPending = calendarData[date].some(
-      (med) => med.status === "pending",
+      (med) => med.status === "pending"
     );
-
-    markedDates[date] = {
-      marked: true,
-      dotColor: hasMissed
-        ? colors.error
-        : hasPending
+    if (calendarData[date].length > 0) {
+      markedDates[date] = {
+        marked: true,
+        dotColor: hasPending
           ? colors.warning
-          : colors.success,
-    };
+          : hasMissed
+            ? colors.error
+            : colors.success,
+      };
+    }
   });
 
   const handleDateSelect = (date: Date) => {
@@ -63,10 +64,10 @@ export default function CalendarScreen() {
   };
 
   const navigateToAddReminder = () => {
-    router.push("/reminders/add");
-    params: {
-      date: formattedDate;
-    }
+    router.push({
+      pathname: "/reminders/add",
+      params: { date: formattedDate },
+    });
   };
 
   const renderItem = ({ item, index }: { item: any; index: number }) => {

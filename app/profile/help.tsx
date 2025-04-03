@@ -1,11 +1,10 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar, Pill, User, Bell, PieChart } from "lucide-react-native";
 import { colors } from "@/constants/colors";
 import { translations } from "@/constants/translations";
-import { Button } from "@/components/Button";
 
 export default function HelpScreen() {
   const helpItems = [

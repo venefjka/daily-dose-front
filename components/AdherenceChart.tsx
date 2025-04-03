@@ -1,4 +1,4 @@
-// todo исправить 3 месяца и всё время, график ломается
+// todo график ломается
 
 import React from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";

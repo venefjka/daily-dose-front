@@ -1,5 +1,4 @@
 import { Stack } from "expo-router";
-import { translations } from "@/constants/translations";
 
 export default function MedicationsLayout() {
   return (
