@@ -1,5 +1,13 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Animated, View, Text, StyleSheet, Dimensions, Platform } from "react-native";
+import {
+  Animated,
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  Platform,
+  KeyboardAvoidingView,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Picker } from "@react-native-picker/picker";
 import { useRouter } from "expo-router";
@@ -15,6 +23,7 @@ import { AlertCircle } from "lucide-react-native";
 import { translations } from "@/constants/translations";
 import { useMedicationStore } from "@/store/medication-store";
 import { IconSelector } from "@/components/IconSelector";
+import { useKeyboard } from "@/hooks/useKeyboard";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const ITEM_HEIGHT = 170;
@@ -37,6 +46,7 @@ export default function AddMedicationScreen() {
   const [selectedIconColor, setSelectedIconColor] = useState(colors.iconGreen);
 
   const { addMedication } = useMedicationStore();
+  const { keyboardShown } = useKeyboard();
 
   useEffect(() => {
     setUnit(UnitsByForm[form][0]);
@@ -124,7 +134,11 @@ export default function AddMedicationScreen() {
           <Picker
             selectedValue={form}
             onValueChange={(value) => setForm(value)}
-            style={Platform.OS === "ios" ? [styles.picker, {height: 100}] : styles.picker}
+            style={
+              Platform.OS === "ios"
+                ? [styles.picker, { height: 100 }]
+                : styles.picker
+            }
           >
             {Object.entries(MedicationForms).map(([key, label]) => (
               <Picker.Item key={key} label={label} value={key} />
@@ -141,7 +155,7 @@ export default function AddMedicationScreen() {
             render: () => (
               <Input
                 value={dosage}
-                onChangeText={(text) => setDosage(text.replaceAll(',','.'))}
+                onChangeText={(text) => setDosage(text.replaceAll(",", "."))}
                 placeholder="20 мг"
                 error={errors.dosage}
               />
@@ -239,69 +253,81 @@ export default function AddMedicationScreen() {
   ];
 
   return (
-    <View style={styles.container}>
-      <View style={{ height: "85%" }}>
-        <Animated.FlatList
-          data={formItems}
-          keyExtractor={(item) => item.key}
-          ListHeaderComponent={<View style={{ height: CENTER_SPACER }} />}
-          ListFooterComponent={<View style={{ height: CENTER_SPACER - 40 }} />}
-          showsVerticalScrollIndicator={false}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: true }
-          )}
-          renderItem={({ item, index }) => {
-            const inputRange = [
-              (index - 1) * ITEM_HEIGHT,
-              index * ITEM_HEIGHT,
-              (index + 1) * ITEM_HEIGHT,
-            ];
-            const opacity = scrollY.interpolate({
-              inputRange,
-              outputRange: [0.5, 1, 0.5],
-              extrapolate: "clamp",
-            });
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 1}
+    >
+      <View style={styles.container}>
+        <View style={{ height: "85%" }}>
+          <Animated.FlatList
+            data={formItems}
+            keyExtractor={(item) => item.key}
+            ListHeaderComponent={<View style={{ height: CENTER_SPACER }} />}
+            ListFooterComponent={
+              <View style={{ height: CENTER_SPACER - 40 }} />
+            }
+            showsVerticalScrollIndicator={false}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+              { useNativeDriver: true }
+            )}
+            renderItem={({ item, index }) => {
+              const inputRange = [
+                (index - 1) * ITEM_HEIGHT,
+                index * ITEM_HEIGHT,
+                (index + 1) * ITEM_HEIGHT,
+              ];
+              const opacity = scrollY.interpolate({
+                inputRange,
+                outputRange: [0.5, 1, 0.5],
+                extrapolate: "clamp",
+              });
 
-            return (
-              <Animated.View style={[styles.itemContainer, { opacity }]}>
-                <Text style={styles.label}>{item.label}</Text>
-                {item.render()}
-              </Animated.View>
-            );
-          }}
-          getItemLayout={(_, index) => ({
-            length: ITEM_HEIGHT,
-            offset: ITEM_HEIGHT * index,
-            index,
-          })}
-        />
+              return (
+                <Animated.View style={[styles.itemContainer, { opacity }]}>
+                  <Text style={styles.label}>{item.label}</Text>
+                  {item.render()}
+                </Animated.View>
+              );
+            }}
+            getItemLayout={(_, index) => ({
+              length: ITEM_HEIGHT,
+              offset: ITEM_HEIGHT * index,
+              index,
+            })}
+          />
 
-        <LinearGradient
-          colors={["rgba(248, 249, 250, 0.5)", "rgba(255, 255, 255, 0)"]}
-          style={[styles.gradient, { top: 0, height: "30%" }]}
-          pointerEvents="none"
-        />
-        <LinearGradient
-          colors={["rgba(255, 255, 255, 0)", "rgba(248, 249, 250, 1)"]}
-          style={[styles.gradient, { bottom: 0, height: "20%" }]}
-          pointerEvents="none"
-        />
+          <LinearGradient
+            colors={["rgba(248, 249, 250, 0.5)", "rgba(255, 255, 255, 0)"]}
+            style={[styles.gradient, { top: 0, height: "30%" }]}
+            pointerEvents="none"
+          />
+        </View>
+
+        {!keyboardShown && (
+          <>
+            <View style={styles.buttonContainer}>
+              <Button
+                title={translations.saveMedication}
+                onPress={handleSave}
+                style={styles.saveButton}
+              />
+              <Button
+                title={translations.cancel}
+                onPress={() => router.back()}
+                variant="outline"
+              />
+            </View>
+            <LinearGradient
+              colors={["rgba(255, 255, 255, 0)", "rgba(248, 249, 250, 1)"]}
+              style={[styles.gradient, { bottom: 0, height: "20%" }]}
+              pointerEvents="none"
+            />
+          </>
+        )}
       </View>
-
-      <View style={styles.buttonContainer}>
-        <Button
-          title={translations.saveMedication}
-          onPress={handleSave}
-          style={styles.saveButton}
-        />
-        <Button
-          title={translations.cancel}
-          onPress={() => router.back()}
-          variant="outline"
-        />
-      </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -336,7 +362,7 @@ const styles = StyleSheet.create({
   choiceRow: {
     flexDirection: "row",
     gap: 12,
-    marginBottom: 16, 
+    marginBottom: 16,
   },
   choiceButton: {
     padding: 12,
@@ -363,9 +389,10 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     position: "absolute",
-    bottom: 20,
+    bottom: 30,
     left: 20,
     right: 20,
+    zIndex: 2,
   },
   saveButton: {
     marginBottom: 12,

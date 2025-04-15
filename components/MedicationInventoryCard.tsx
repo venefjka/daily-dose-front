@@ -55,7 +55,7 @@ export const MedicationInventoryCard: React.FC<
         {trackStock && (
           <TouchableOpacity style={styles.editButton} onPress={onRefill}>
             <Plus size={18} color={colors.primary} />
-            <Text style={styles.addButtonText}> {translations.add}</Text>
+            <Text style={styles.addButtonText}> {translations.addQuantity}</Text>
           </TouchableOpacity>
         )}
       </View>

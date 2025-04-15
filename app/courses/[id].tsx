@@ -6,8 +6,8 @@ import {
   Animated,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { useMedicationStore } from "@/store/medication-store";
@@ -23,8 +23,11 @@ import { ScheduleFrequency } from "@/components/ScheduleFrequency";
 import { ScheduleMealRelation } from "@/components/ScheduleMealRelation";
 import { ScheduleDuration } from "@/components/ScheduleDuration";
 import { LinearGradient } from "expo-linear-gradient";
+import { useKeyboard } from "@/hooks/useKeyboard";
 
-const ITEM_HEIGHT = 500;
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const ITEM_HEIGHT = 400;
+const CENTER_SPACER = SCREEN_HEIGHT / 2 - ITEM_HEIGHT / 2;
 
 export default function EditScheduleScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -33,6 +36,7 @@ export default function EditScheduleScreen() {
 
   const [errors, setErrors] = useState<Record<string, any>>({});
 
+  const { keyboardShown } = useKeyboard();
   const {
     schedules,
     draftSchedules,
@@ -210,42 +214,57 @@ export default function EditScheduleScreen() {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -100}
+      keyboardVerticalOffset={Platform.OS === "ios" ? -30 : 1}
     >
-      <SafeAreaView style={styles.container} edges={[]}>
-        {medication && (
-          <View style={styles.medicationItem}>
-            <View style={styles.medicationIcon}>
-              <MedicationIcon
-                iconName={medication.iconName || "Pill"}
-                color={medication.iconColor || colors.primary}
-                size={24}
-              />
-            </View>
-            <View style={styles.medicationInfo}>
-              <Text style={styles.medicationName}>{medication.name}</Text>
-              <Text style={styles.medicationDosage}>
-                {MedicationForms[medication.form]}
-                {medication.dosage ? `, ${medication.dosage}` : ""}
-              </Text>
-            </View>
+      {medication && (
+        <View style={styles.medicationItem}>
+          <View style={styles.medicationIcon}>
+            <MedicationIcon
+              iconName={medication.iconName || "Pill"}
+              color={medication.iconColor || colors.primary}
+              size={24}
+            />
           </View>
-        )}
+          <View style={styles.medicationInfo}>
+            <Text style={styles.medicationName}>{medication.name}</Text>
+            <Text style={styles.medicationDosage}>
+              {MedicationForms[medication.form]}
+              {medication.dosage ? `, ${medication.dosage}` : ""}
+            </Text>
+          </View>
+        </View>
+      )}
 
-        <View style={{ height: "75%" }}>
+      <View style={styles.container}>
+        <View style={{ height: "85%" }}>
           <Animated.FlatList
             data={formItems}
             keyExtractor={(item) => item.key}
-            ListHeaderComponent={<View style={{ height: 120 }} />}
-            ListFooterComponent={<View style={{ height: 120 }} />}
+            ListHeaderComponent={
+              <View style={{ height: CENTER_SPACER - 100 }} />
+            }
+            ListFooterComponent={
+              <View style={{ height: CENTER_SPACER - 100 }} />
+            }
             showsVerticalScrollIndicator={false}
             onScroll={Animated.event(
               [{ nativeEvent: { contentOffset: { y: scrollY } } }],
               { useNativeDriver: true }
             )}
-            renderItem={({ item }) => {
+            renderItem={({ item, index }) => {
+              const inputRange = [
+                (index - 1) * ITEM_HEIGHT,
+                index * ITEM_HEIGHT,
+                (index + 1) * ITEM_HEIGHT,
+              ];
+              const opacity = scrollY.interpolate({
+                inputRange,
+                outputRange: [0.5, 1, 0.5],
+                extrapolate: "clamp",
+              });
+
               return (
-                <Animated.View style={[styles.itemContainer]}>
+                <Animated.View style={[styles.itemContainer, { opacity }]}>
                   <Text style={styles.label}>{item.label}</Text>
                   {item.render()}
                 </Animated.View>
@@ -257,32 +276,35 @@ export default function EditScheduleScreen() {
               index,
             })}
           />
-
           <LinearGradient
             colors={["rgba(248, 249, 250, 0.5)", "rgba(255, 255, 255, 0)"]}
-            style={[styles.gradient, { top: 0, height: "30%" }]}
-            pointerEvents="none"
-          />
-          <LinearGradient
-            colors={["rgba(255, 255, 255, 0)", "rgba(248, 249, 250, 1)"]}
-            style={[styles.gradient, { bottom: 0, height: "30%" }]}
+            style={[styles.gradient, { top: 0, height: "20%" }]}
             pointerEvents="none"
           />
         </View>
+        {!keyboardShown && (
+          <>
+            <View style={styles.buttonContainer}>
+              <Button
+                title={translations.saveEdit}
+                onPress={handleSave}
+                style={styles.saveButton}
+              />
+              <Button
+                title={translations.cancelEdit}
+                onPress={handleCancel}
+                variant="outline"
+              />
+            </View>
 
-        <View style={styles.buttonContainer}>
-          <Button
-            title={translations.saveEdit}
-            onPress={handleSave}
-            style={styles.saveButton}
-          />
-          <Button
-            title={translations.cancelEdit}
-            onPress={handleCancel}
-            variant="outline"
-          />
-        </View>
-      </SafeAreaView>
+            <LinearGradient
+              colors={["rgba(255, 255, 255, 0)", "rgba(248, 249, 250, 1)"]}
+              style={[styles.gradient, { bottom: 0, height: "30%" }]}
+              pointerEvents="none"
+            />
+          </>
+        )}
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -310,9 +332,10 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     position: "absolute",
-    bottom: 20,
+    bottom: 30,
     left: 20,
     right: 20,
+    zIndex: 2,
   },
   saveButton: {
     marginBottom: 12,
