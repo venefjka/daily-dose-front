@@ -42,7 +42,7 @@ interface MedicationState {
   // Schedule CRUD
   addSchedule: (
     schedule: Omit<MedicationSchedule, "id" | "createdAt" | "updatedAt">
-  ) => string;
+  ) => Promise<string>;
   updateSchedule: (id: string, schedule: Partial<MedicationSchedule>) => void;
   deleteSchedule: (id: string, keepHistory?: boolean) => void;
 
@@ -148,7 +148,7 @@ export const useMedicationStore = create<MedicationState>()(
         });
       },
 
-      addSchedule: (scheduleData) => {
+      addSchedule: async (scheduleData) => {
         const id = Date.now().toString();
         const timestamp = Date.now();
 
@@ -579,11 +579,12 @@ export const useMedicationStore = create<MedicationState>()(
         return Object.entries(medicationAdherence)
           .map(([medicationId, stats]) => {
             const intake = intakes.find(
-              (med) => med.id === medicationId
+              (med) => med.medicationId === medicationId
             );
             return {
               medicationId,
-              medicationName: intake?.medicationName || translations.unknownMedication,
+              medicationName:
+                intake?.medicationName || translations.unknownMedication,
               adherenceRate:
                 stats.total > 0 ? (stats.taken / stats.total) * 100 : 0,
             };
@@ -642,7 +643,7 @@ export const useMedicationStore = create<MedicationState>()(
     }),
     {
       name: "medication-storage",
-      version: 1, // Меняем версию, чтобы сбросить state
+      version: 2, // Меняем версию, чтобы сбросить state
       storage: createJSONStorage(() => AsyncStorage),
     }
   )
