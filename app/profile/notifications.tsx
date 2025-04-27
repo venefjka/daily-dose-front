@@ -1,6 +1,3 @@
-// todo наверное редактирование времени напоминания стоит перенести для каждого расписания/лекарства отдельно
-// сделать чтоб работало
-
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Switch, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,18 +6,33 @@ import { colors } from "@/constants/colors";
 import { translations } from "@/constants/translations";
 import { useSettingsStore } from "@/store/settings-store";
 import { Button } from "@/components/Button";
-import { registerForPushNotificationsAsync } from "@/utils/notification-utils";
+import {
+  cancelAllNotifications,
+  registerForPushNotificationsAsync,
+  rescheduleAllCourseNotifications,
+} from "@/utils/notification-utils";
+import { useNotificationStore } from "@/store/notification-store";
 
 export default function NotificationsScreen() {
   const { notificationSettings, updateNotificationSettings } =
     useSettingsStore();
+  const { clearAllNotifications } = useNotificationStore();
   const [isRegistering, setIsRegistering] = useState(false);
 
   const toggleMedicationReminders = () => {
+    const newValue = !notificationSettings.medicationRemindersEnabled;
     updateNotificationSettings({
-      medicationRemindersEnabled:
-        !notificationSettings.medicationRemindersEnabled,
+      medicationRemindersEnabled: newValue,
     });
+
+    if (!newValue) {
+      cancelAllNotifications();
+      clearAllNotifications();
+    } else {
+      rescheduleAllCourseNotifications(
+        notificationSettings.minutesBeforeSheduledTime
+      );
+    }
   };
 
   const toggleLowStockReminders = () => {
@@ -31,8 +43,9 @@ export default function NotificationsScreen() {
 
   const updateReminderTime = (minutes: number) => {
     updateNotificationSettings({
-      reminderTime: minutes,
+      minutesBeforeSheduledTime: minutes,
     });
+    rescheduleAllCourseNotifications(minutes);
   };
 
   const requestNotificationPermissions = async () => {
@@ -41,7 +54,7 @@ export default function NotificationsScreen() {
       const token = await registerForPushNotificationsAsync();
       if (token) {
         // В реальном приложении здесь был бы код для отправки токена на сервер
-        console.log("Expo push token:", token);
+        console.warn("Expo push token:", token);
       }
     } catch (error) {
       console.error("Error registering for push notifications:", error);
@@ -91,7 +104,8 @@ export default function NotificationsScreen() {
                 {translations.reminderTime}
               </Text>
               <Text style={styles.settingDescription}>
-                {notificationSettings.reminderTime} {translations.minutesBefore}
+                {notificationSettings.minutesBeforeSheduledTime}{" "}
+                {translations.minutesBefore}
               </Text>
             </View>
             <View style={styles.timeButtons}>
@@ -99,7 +113,7 @@ export default function NotificationsScreen() {
                 title="5"
                 onPress={() => updateReminderTime(5)}
                 variant={
-                  notificationSettings.reminderTime === 5
+                  notificationSettings.minutesBeforeSheduledTime === 5
                     ? "primary"
                     : "outline"
                 }
@@ -110,7 +124,7 @@ export default function NotificationsScreen() {
                 title="15"
                 onPress={() => updateReminderTime(15)}
                 variant={
-                  notificationSettings.reminderTime === 15
+                  notificationSettings.minutesBeforeSheduledTime === 15
                     ? "primary"
                     : "outline"
                 }
@@ -121,7 +135,7 @@ export default function NotificationsScreen() {
                 title="30"
                 onPress={() => updateReminderTime(30)}
                 variant={
-                  notificationSettings.reminderTime === 30
+                  notificationSettings.minutesBeforeSheduledTime === 30
                     ? "primary"
                     : "outline"
                 }

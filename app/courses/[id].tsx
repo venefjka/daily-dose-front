@@ -11,6 +11,8 @@ import {
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { useMedicationStore } from "@/store/medication-store";
+import { useSettingsStore } from "@/store/settings-store";
+import { useNotificationStore } from "@/store/notification-store";
 import { useScheduleForm } from "@/hooks/useScheduleForm";
 import { MedicationForms } from "@/constants/medication";
 import { translations } from "@/constants/translations";
@@ -25,6 +27,10 @@ import { ScheduleDuration } from "@/components/ScheduleDuration";
 import { LinearGradient } from "expo-linear-gradient";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useKeyboard } from "@/hooks/useKeyboard";
+import {
+  rescheduleCourseNotifications,
+  scheduleCourseNotifications,
+} from "@/utils/notification-utils";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const ITEM_HEIGHT = 350;
@@ -70,14 +76,42 @@ export default function EditScheduleScreen() {
     updateUnit,
   } = useScheduleForm(originalSchedule);
 
-  const handleSave = () => {
+  const { getNotifications, setNotifications } = useNotificationStore();
+
+  const { notificationSettings } = useSettingsStore();
+  const minutesBefore = notificationSettings.minutesBeforeSheduledTime;
+
+  const handleSave = async () => {
     if (!validateForm()) return;
-    if (draft) {
-      const newSchedule = { ...schedule, id: scheduleId.split("-")[1] };
+    const newId = scheduleId.split("-")[1];
+    if (draft && !existing) {
+      const newSchedule = { ...schedule, id: newId };
       addSchedule(newSchedule);
       deleteDraftSchedule(scheduleId);
+
+      if (notificationSettings.medicationRemindersEnabled) {
+        const identifiers = await scheduleCourseNotifications(
+          newSchedule,
+          medication?.name || translations.medication,
+          minutesBefore
+        );
+
+        setNotifications(newId, identifiers);
+      } else setNotifications(newId, []);
     } else {
       updateSchedule(scheduleId, schedule);
+
+      if (notificationSettings.medicationRemindersEnabled) {
+        const oldIdentifiers = getNotifications(scheduleId);
+        const newIdentifiers = await rescheduleCourseNotifications(
+          oldIdentifiers,
+          schedule,
+          medication?.name || translations.medication,
+          minutesBefore
+        );
+
+        setNotifications(scheduleId, newIdentifiers);
+      } else setNotifications(scheduleId, []);
     }
     router.replace("/(tabs)/calendar");
   };
@@ -125,6 +159,14 @@ export default function EditScheduleScreen() {
 
       if (!item.unit) {
         errorsForIndex.push(translations.selectMeasureType);
+      }
+
+      const duplicateIndex = schedule.times.findIndex(
+        (otherItem, otherIndex) =>
+          otherIndex !== index && otherItem.time === item.time
+      );
+      if (duplicateIndex !== -1) {
+        errorsForIndex.push(translations.duplicateTime);
       }
 
       timeErrors[index] =
@@ -233,7 +275,7 @@ export default function EditScheduleScreen() {
             <Text style={styles.medicationName}>{medication.name}</Text>
             <Text style={styles.medicationDosage}>
               {MedicationForms[medication.form]}
-              {medication.dosage ? `, ${medication.dosage}` : ""}
+              {medication.dosagePerUnit ? `, ${medication.dosagePerUnit}` : ""}
             </Text>
           </View>
         </View>
@@ -248,6 +290,7 @@ export default function EditScheduleScreen() {
           enableResetScrollToCoords={false}
           showsVerticalScrollIndicator={false}
           scrollEventThrottle={32} // вызывает onScroll каждые 32 мс
+          removeClippedSubviews={true} // android scroll lags fix
           onScroll={(e) => {
             scrollY.setValue(e.nativeEvent.contentOffset.y);
           }}
