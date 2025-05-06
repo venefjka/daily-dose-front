@@ -68,6 +68,7 @@ export interface MedicationIntake {
   status: Status;
   takenAt?: number;
   createdAt: number;
+  updatedAt: number;
   medicationName: string;
   mealRelation: MealRelation;
   dosagePerUnit?: string;
@@ -121,8 +122,9 @@ export interface MedicationStats {
 }
 
 export interface NotificationSettings {
+  id: string;
   medicationRemindersEnabled: boolean;
-  minutesBeforeSheduledTime: number;
+  minutesBeforeScheduledTime: number;
   lowStockRemindersEnabled: boolean;
 }
 

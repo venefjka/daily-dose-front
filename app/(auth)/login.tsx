@@ -16,6 +16,7 @@ import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { useAuthStore } from "@/store/auth-store";
 import { translations } from "@/constants/translations";
+import { ErrorModal } from "@/components/ErrorModal";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -31,7 +32,7 @@ export default function LoginScreen() {
 
     if (!email) {
       newErrors.email = translations.required;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email)) {
       newErrors.email = translations.invalidEmail;
     }
 
@@ -50,7 +51,7 @@ export default function LoginScreen() {
 
     try {
       await login(email, password);
-      router.replace("/(tabs)/calendar");
+      router.replace("/");
     } catch (error) {
       console.error("Login error:", error);
     }
@@ -112,6 +113,7 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ErrorModal />
     </SafeAreaView>
   );
 }

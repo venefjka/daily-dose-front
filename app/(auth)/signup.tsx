@@ -16,6 +16,8 @@ import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { useAuthStore } from "@/store/auth-store";
 import { translations } from "@/constants/translations";
+import { useSettingsStore } from "@/store/settings-store";
+import { ErrorModal } from "@/components/ErrorModal";
 
 export default function SignupScreen() {
   const [name, setName] = useState("");
@@ -45,7 +47,7 @@ export default function SignupScreen() {
 
     if (!email) {
       newErrors.email = translations.required;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email)) {
       newErrors.email = translations.invalidEmail;
     }
 
@@ -69,8 +71,9 @@ export default function SignupScreen() {
     if (!validateForm()) return;
 
     try {
-      await signup(name, email, password);
-      router.replace("/(tabs)/calendar");
+      await signup(Date.now().toString(), name, email, password);
+      useSettingsStore.getState().setDefaultSettings();
+      router.replace("/");
     } catch (error) {
       console.error("Signup error:", error);
     }
@@ -152,6 +155,7 @@ export default function SignupScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ErrorModal />
     </SafeAreaView>
   );
 }
